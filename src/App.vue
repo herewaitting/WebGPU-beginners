@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import HelloWorld from './components/HelloWorld.vue'
-import GpuTest from './components/gputest/GpuTest.vue'
+import triangle from './components/triangle/triangle.vue'
 </script>
 
 <template>
-  <GpuTest/>
+  <triangle/>
 </template>
 
 <style scoped>
