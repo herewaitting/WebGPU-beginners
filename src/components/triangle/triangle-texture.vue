@@ -1,7 +1,7 @@
 <script lang="ts">
 import glslangModule from "../../lib/glslang"
-import vertShaderCode from './triangleuniform.vert.wgsl?raw';
-import fragShaderCode from './triangle.frag.wgsl?raw';
+import vertShaderCode from './triangle-texture.vert.wgsl?raw';
+import fragShaderCode from './triangle-texture.frag.wgsl?raw';
 // 📈 Position Vertex Buffer Data
 const positions = new Float32Array([
   1.0, -1.0, 0.0, -1.0, -1.0, 0.0, 0.0, 1.0, 0.0
@@ -17,6 +17,14 @@ const colors = new Float32Array([
   0.0,
   0.0,
   1.0 // 🔵
+]);
+const uvs = new Float32Array([
+  1.0,
+  1.0,
+  0.0, // 🔴
+  1.0,
+  0.5,
+  0.0
 ]);
 
 // 📇 Index Buffer Data
@@ -103,6 +111,7 @@ export default {
 
       var positionBuffer = createBuffer(positions, GPUBufferUsage.VERTEX);
       var colorBuffer = createBuffer(colors, GPUBufferUsage.VERTEX);
+      var uvBuffer = createBuffer(uvs, GPUBufferUsage.VERTEX);
       var indexBuffer = createBuffer(indices, GPUBufferUsage.INDEX);
 
       // 🖍️ Shaders
@@ -131,6 +140,11 @@ export default {
         offset: 0,
         format: 'float32x3'
       };
+      const uvAttribDesc: GPUVertexAttribute = {
+        shaderLocation: 2, // [[location(1)]]
+        offset: 0,
+        format: 'float32x2'
+      };
       const positionBufferDesc: GPUVertexBufferLayout = {
         attributes: [positionAttribDesc],
         arrayStride: 4 * 3, // sizeof(float) * 3
@@ -139,6 +153,11 @@ export default {
       const colorBufferDesc: GPUVertexBufferLayout = {
         attributes: [colorAttribDesc],
         arrayStride: 4 * 3, // sizeof(float) * 3
+        stepMode: 'vertex'
+      };
+      const uvBufferDesc: GPUVertexBufferLayout = {
+        attributes: [uvAttribDesc],
+        arrayStride: 4 * 2, // sizeof(float) * 3
         stepMode: 'vertex'
       };
 
@@ -157,7 +176,7 @@ export default {
       const vertex: GPUVertexState = {
         module: vertModule,
         entryPoint: 'main',
-        buffers: [positionBufferDesc, colorBufferDesc]
+        buffers: [positionBufferDesc, colorBufferDesc, uvBufferDesc]
       };
 
       // 🌀 Color/Blend State
@@ -195,14 +214,59 @@ export default {
         size: uniformBufferSize,
         usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
       });
+
+
+
+
+      let cubeTexture: GPUTexture;
+      {
+        const img = document.createElement('img');
+        img.src = new URL(
+          '../../../assets/img/Di-3d.png',
+          import.meta.url
+        ).toString();
+        await img.decode();
+        const imageBitmap = await createImageBitmap(img);
+
+        cubeTexture = device.createTexture({
+          size: [imageBitmap.width, imageBitmap.height, 1],
+          format: 'rgba8unorm',
+          usage:
+            GPUTextureUsage.TEXTURE_BINDING |
+            GPUTextureUsage.COPY_DST |
+            GPUTextureUsage.RENDER_ATTACHMENT,
+        });
+        device.queue.copyExternalImageToTexture(
+          { source: imageBitmap },
+          { texture: cubeTexture },
+          [imageBitmap.width, imageBitmap.height]
+        );
+      }
+
+      // Create a sampler with linear filtering for smooth interpolation.
+      const sampler = device.createSampler({
+        magFilter: 'linear',
+        minFilter: 'linear',
+      });
+
+
+
       const uniformBindGroup = device.createBindGroup({
         layout: pipeline.getBindGroupLayout(0),
         entries: [
+          // {
+          //   binding: 0,
+          //   resource: {
+          //     buffer: uniformBuffer,
+          //   },
+          // },
           {
             binding: 0,
-            resource: {
-              buffer: uniformBuffer,
-            },
+            resource: sampler,
+          },
+          {
+            binding: 1,
+            resource: cubeTexture.createView(),
           },
         ],
       });
@@ -211,7 +275,7 @@ export default {
 
       var render = () => {
         const transformationMatrix = {
-          buffer: new Float32Array([1,0,1, 1]),
+          buffer: new Float32Array([1, 0, 1, 1]),
           byteOffset: 0,
           byteLength: 3
         };
@@ -271,6 +335,7 @@ export default {
         passEncoder.setBindGroup(0, uniformBindGroup);
         passEncoder.setVertexBuffer(0, positionBuffer);
         passEncoder.setVertexBuffer(1, colorBuffer);
+        passEncoder.setVertexBuffer(2, uvBuffer);
         passEncoder.setIndexBuffer(indexBuffer, 'uint16');
         passEncoder.drawIndexed(3, 1);
         passEncoder.end();
