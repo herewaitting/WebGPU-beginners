@@ -3,9 +3,11 @@ export class Buffer {
     arr: Float32Array | Uint16Array;
     usage: number;
     buffer: GPUBuffer | undefined;
-    constructor(arr: Float32Array | Uint16Array, usage: number){
+    location: GPUIndex32;
+    constructor(arr: Float32Array | Uint16Array, usage: number, location: GPUIndex32 = 0){
         this.arr = arr;
         this.usage = usage;
+        this.location = location;
     }
     createBuffer(device: GPUDevice) {
         let desc = {

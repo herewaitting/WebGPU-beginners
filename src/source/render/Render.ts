@@ -1,6 +1,6 @@
 /// <reference types="@webgpu/types" />
 
-import Buffer from "../core/Buffer";
+
 import glslangModule from "../../lib/glslang"
 import { Pipeline } from "./Pipeline";
 import { PipelineProgram } from "./PipelineProgram";
@@ -21,7 +21,7 @@ class Render {
     layout: GPUPipelineLayout | null | undefined;
     primitive: GPUPrimitiveState | undefined;
     pipelineArr: PipelineProgram[] = [];
-    constructor(id: string, options: RenderOpt) {
+    constructor(id: string, options?: RenderOpt) {
         if (!navigator || !navigator.gpu) {
             throw Error("初始化环境错误！");
         }
@@ -89,6 +89,7 @@ class Render {
         let device = this.device;
         let canvas = this.canvas;
         if (!context || !device) {
+            requestAnimationFrame(this.loop.bind(this));
             return;
         }
         var colorTexture = context.getCurrentTexture();
@@ -141,11 +142,14 @@ class Render {
                 canvas.width,
                 canvas.height
             );
-            for (let key in program.attributeBuffers) {
-                let bfs = program.attributeBuffers[key];
-                passEncoder.setVertexBuffer(bfs.location, bfs.buffer);
+            // for (let key in program.pipelineOpt) {
+            //     let bfs = program.attributeBuffers[key];
+            //     passEncoder.setVertexBuffer(bfs.location, bfs.buffer as any);
+            // }
+            for (let data of (program as any).datas) {
+                passEncoder.setVertexBuffer(data.location, data.data as any);
             }
-            passEncoder.setIndexBuffer(program.indexBuffer, 'uint16');
+            passEncoder.setIndexBuffer(program.indexBuffer as any, 'uint16');
             passEncoder.drawIndexed(3, 1);
             passEncoder.end();
         }
@@ -153,7 +157,7 @@ class Render {
 
         device.queue.submit([commandEncoder.finish()]);
 
-        requestAnimationFrame(this.loop);
+        requestAnimationFrame(this.loop.bind(this));
     }
 }
 

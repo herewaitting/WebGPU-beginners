@@ -28,7 +28,7 @@ export class Attribute {
         if (!options.arr || !options.arr.length) {
             return;
         }
-        let opt = {...DefaultAttribute, ...options};
+        let opt = {...options, ...DefaultAttribute};
         this.arr = opt.arr;
         this.location = opt.location;
         this.stride = opt.location;

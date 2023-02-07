@@ -1,18 +1,20 @@
+import { Buffer } from "../core/Buffer"
+import { Attribute } from "../core/Attribute"
 
 interface IAttributeBuffersOpt {
-    positionBuffer: GPUBuffer;
-    [key: string]: GPUBuffer;
+    positionBuffer: Buffer;
+    [key: string]: Buffer;
 }
 
 interface IPipelineProgramOpt {
     attributeBuffers: IAttributeBuffersOpt;
-    indexBuffer: GPUBuffer;
+    indexBuffer: Buffer;
 }
 
 export class PipelineProgram {
     pipeline: GPURenderPipeline | undefined;
     attributeBuffers: IAttributeBuffersOpt;
-    indexBuffer: GPUBuffer;
+    indexBuffer: Buffer;
     constructor (options: IPipelineProgramOpt) {
         this.attributeBuffers = options.attributeBuffers;
         this.indexBuffer = options.indexBuffer;
