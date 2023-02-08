@@ -11,7 +11,6 @@ interface RenderOpt {
 
 class Render {
     public autoRender: boolean = true;
-    public ready: Promise<any>;
     adapter: GPUAdapter | null | undefined;
     device: GPUDevice | null | undefined;
     glslang: any;
@@ -31,58 +30,56 @@ class Render {
         }
         this.canvas = dom;
         this.depth = {};
-        this.ready = new Promise(async (resolve, reject) => {
-            // 准备适配器
-            this.adapter = await navigator.gpu.requestAdapter();
-            this.device = await this.adapter?.requestDevice();
-            if (!this.device) {
-                throw Error("获取硬件失败");
-            }
-            this.glslang = await glslangModule();
-            this.context = this.canvas.getContext("webgpu");
-            if (!this.context) {
-                throw Error("获取webgpu上下文失败");
-            }
+    }
+    async init() {
+        // 准备适配器
+        this.adapter = await navigator.gpu.requestAdapter();
+        this.device = await this.adapter?.requestDevice();
+        if (!this.device) {
+            throw Error("获取硬件失败");
+        }
+        this.glslang = await glslangModule();
+        this.context = this.canvas.getContext("webgpu");
+        if (!this.context) {
+            throw Error("获取webgpu上下文失败");
+        }
 
-            const canvasConfig: GPUCanvasConfiguration = {
-                device: this.device,
-                format: 'bgra8unorm',
-                usage:
-                    GPUTextureUsage.RENDER_ATTACHMENT |
-                    GPUTextureUsage.COPY_SRC,
-                alphaMode: 'opaque'
-            };
-            this.context.configure(canvasConfig);
+        const canvasConfig: GPUCanvasConfiguration = {
+            device: this.device,
+            format: 'bgra8unorm',
+            usage:
+                GPUTextureUsage.RENDER_ATTACHMENT |
+                GPUTextureUsage.COPY_SRC,
+            alphaMode: 'opaque'
+        };
+        this.context.configure(canvasConfig);
 
-            const depthTextureDesc: GPUTextureDescriptor = {
-                size: [this.canvas.width, this.canvas.height, 1],
-                dimension: '2d',
-                format: 'depth24plus-stencil8',
-                usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC
-            };
+        const depthTextureDesc: GPUTextureDescriptor = {
+            size: [this.canvas.width, this.canvas.height, 1],
+            dimension: '2d',
+            format: 'depth24plus-stencil8',
+            usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC
+        };
 
-            this.depth.depthTexture = this.device.createTexture(depthTextureDesc);
-            this.depth.depthTextureView = this.depth.depthTexture.createView();
+        this.depth.depthTexture = this.device.createTexture(depthTextureDesc);
+        this.depth.depthTextureView = this.depth.depthTexture.createView();
 
-            // 🌑 Depth
-            this.depth.depthStencil = {
-                depthWriteEnabled: true,
-                depthCompare: 'less',
-                format: 'depth24plus-stencil8'
-            };
+        // 🌑 Depth
+        this.depth.depthStencil = {
+            depthWriteEnabled: true,
+            depthCompare: 'less',
+            format: 'depth24plus-stencil8'
+        };
 
-            // 🦄 Uniform Data
-            const pipelineLayoutDesc = { bindGroupLayouts: [] };
-            this.layout = this.device.createPipelineLayout(pipelineLayoutDesc);
+        // 🦄 Uniform Data
+        const pipelineLayoutDesc = { bindGroupLayouts: [] };
+        this.layout = this.device.createPipelineLayout(pipelineLayoutDesc);
 
-            this.primitive = {
-                frontFace: 'cw',
-                cullMode: 'none',
-                topology: 'triangle-list'
-            };
-
-            resolve(this);
-        });
+        this.primitive = {
+            frontFace: 'cw',
+            cullMode: 'none',
+            topology: 'triangle-list'
+        };
     }
     loop() {
         let context = this.context;
@@ -146,8 +143,8 @@ class Render {
             //     let bfs = program.attributeBuffers[key];
             //     passEncoder.setVertexBuffer(bfs.location, bfs.buffer as any);
             // }
-            for (let data of (program as any).datas) {
-                passEncoder.setVertexBuffer(data.location, data.data as any);
+            for (let data of (program as any).attribute) {
+                passEncoder.setVertexBuffer(data.location, data.buffer.buffer);
             }
             passEncoder.setIndexBuffer(program.indexBuffer as any, 'uint16');
             passEncoder.drawIndexed(3, 1);

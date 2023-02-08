@@ -42,88 +42,79 @@ export default {
   },
   async mounted() {
     let render = new Render("App");
-    render.ready.then(() => {
-      console.log(render);
+    await render.init();
 
-      var positionBuffer = new Buffer(positions, GPUBufferUsage.VERTEX, 0);
-      positionBuffer.createBuffer(render.device as any);
-      var colorBuffer = new Buffer(colors, GPUBufferUsage.VERTEX, 1);
-      colorBuffer.createBuffer(render.device as any);
-      var indexBuffer = new Buffer(indices, GPUBufferUsage.INDEX);
-      indexBuffer.createBuffer(render.device as any);
+    var positionBuffer = new Buffer(positions, GPUBufferUsage.VERTEX, 0);
+    positionBuffer.createBuffer(render.device as any);
+    var colorBuffer = new Buffer(colors, GPUBufferUsage.VERTEX, 1);
+    colorBuffer.createBuffer(render.device as any);
+    var indexBuffer = new Buffer(indices, GPUBufferUsage.INDEX);
+    indexBuffer.createBuffer(render.device as any);
 
-      let posatt = new Attribute({
-        arr: [
-          1.0, -1.0, 0.0, -1.0, -1.0, 0.0, 0.0, 1.0, 0.0
-        ],
-        format: "float32x3",
-        stride: 12,
-        location: 0
-      });
-      let coloratt = new Attribute({
-        arr: [
-          1.0,
-          0.0,
-          0.0, // 🔴
-          0.0,
-          1.0,
-          0.0, // 🟢
-          0.0,
-          0.0,
-          1.0 // 🔵
-        ],
-        format: "float32x3",
-        stride: 12,
-        location: 1 
-      });
-
-      var vs = new Shader({
-        type: 0,
-        shaderTxt: vertShaderCode,
-        target: undefined,
-        buffers: [posatt.bufferDesc, coloratt.bufferDesc],
-        datas: [posatt.arr, coloratt.arr]
-      });
-      vs.createShaderModule(render.device as any);
-
-      const colorState: GPUColorTargetState = {
-        format: 'bgra8unorm'
-      };
-
-      const fragment = new Shader({
-        type: 0,
-        shaderTxt: fragShaderCode,
-        target: [colorState]
-      });
-      fragment.createShaderModule(render.device as any);
-
-      const pipelineLayoutDesc = { bindGroupLayouts: [] };
-      const layout = render.device?.createPipelineLayout(pipelineLayoutDesc);
-      var pip = new Pipeline({
-        vertex: vs.state,
-        fragment: fragment.state,
-        layout
-      } as any);
-      (pip as any).datas = [
-        {
-          location: 0,
-          data: positionBuffer.buffer
-        },
-        {
-          location: 1,
-          data: colorBuffer.buffer
-        }
-      ];
-
-      (pip as any).indexBuffer = indexBuffer.buffer;
-      pip.createPipeline(render.device as any);
-
-      render.pipelineArr.push(pip as any);
-
-      
-      render.loop();
-
+    let posatt = new Attribute({
+      arr: [
+        1.0, -1.0, 0.0, -1.0, -1.0, 0.0, 0.0, 1.0, 0.0
+      ],
+      format: "float32x3",
+      stride: 12,
+      location: 0,
+      buffer: positionBuffer
     });
+    let coloratt = new Attribute({
+      arr: [
+        1.0,
+        0.0,
+        0.0, // 🔴
+        0.0,
+        1.0,
+        0.0, // 🟢
+        0.0,
+        0.0,
+        1.0 // 🔵
+      ],
+      format: "float32x3",
+      stride: 12,
+      location: 1,
+      buffer: colorBuffer
+    });
+
+    var vs = new Shader({
+      type: 0,
+      shaderTxt: vertShaderCode,
+      target: undefined,
+      buffers: [posatt.bufferDesc, coloratt.bufferDesc],
+      datas: [posatt.arr, coloratt.arr]
+    });
+    vs.createShaderModule(render.device as any);
+
+    const colorState: GPUColorTargetState = {
+      format: 'bgra8unorm'
+    };
+
+    const fragment = new Shader({
+      type: 0,
+      shaderTxt: fragShaderCode,
+      target: [colorState]
+    });
+    fragment.createShaderModule(render.device as any);
+
+    const pipelineLayoutDesc = { bindGroupLayouts: [] };
+    const layout = render.device?.createPipelineLayout(pipelineLayoutDesc);
+    var pip = new Pipeline({
+      attribute: [posatt, coloratt],
+      vertex: vs.state,
+      fragment: fragment.state,
+      layout,
+      shader: vs
+    });
+
+    (pip as any).indexBuffer = indexBuffer.buffer;
+    pip.createPipeline(render.device as any);
+
+    render.pipelineArr.push(pip as any);
+
+
+    render.loop()
   }
 }
 
