@@ -100,10 +100,12 @@ export default {
 
     const pipelineLayoutDesc = { bindGroupLayouts: [] };
     const layout = render.device?.createPipelineLayout(pipelineLayoutDesc);
+    if (!layout) {
+      return;
+    }
     var pip = new Pipeline({
       attribute: [posatt, coloratt],
-      vertex: vs.state,
-      fragment: fragment.state,
+      fragment: fragment.state as GPUFragmentState,
       layout,
       shader: vs
     });
