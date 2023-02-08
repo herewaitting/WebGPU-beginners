@@ -14,11 +14,11 @@ const DefaultAttribute = {
 }
 
 export class Attribute {
-    location: GPUIndex32 | undefined = 0;
-    offset: GPUSize64 | undefined = 0;
+    location: GPUIndex32 | undefined;
+    offset: GPUSize64 | undefined;
     format: GPUVertexFormat = 'float32x3';
     arr: number[] = [];
-    stride: GPUSize64 | undefined = 12;
+    stride: GPUSize64 | undefined;
     stepMode: GPUVertexStepMode | undefined;
     bufferDesc: GPUVertexBufferLayout = {
         arrayStride: 0,
@@ -28,10 +28,10 @@ export class Attribute {
         if (!options.arr || !options.arr.length) {
             return;
         }
-        let opt = {...options, ...DefaultAttribute};
+        let opt = {...DefaultAttribute, ...options};
         this.arr = opt.arr;
         this.location = opt.location;
-        this.stride = opt.location;
+        this.stride = opt.stride;
         this.offset = opt.offset;
         this.format = opt.format;
         this.stepMode = opt.stepMode as GPUVertexStepMode;
