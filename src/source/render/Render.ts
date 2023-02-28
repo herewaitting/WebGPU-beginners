@@ -117,39 +117,36 @@ class Render {
 
         var commandEncoder = device.createCommandEncoder();
 
+        var passEncoder = commandEncoder.beginRenderPass(renderPassDesc);
+        passEncoder.setViewport(
+            0,
+            0,
+            canvas.width,
+            canvas.height,
+            0,
+            1
+        );
+        passEncoder.setScissorRect(
+            0,
+            0,
+            canvas.width,
+            canvas.height
+        );
+
         // 🖌️ Encode drawing commands
         for (let program of this.pipelineArr) {
             let pipeline = program.pipeline;
             if (!pipeline) {
                 continue;
             }
-            var passEncoder = commandEncoder.beginRenderPass(renderPassDesc);
             passEncoder.setPipeline(pipeline);
-            passEncoder.setViewport(
-                0,
-                0,
-                canvas.width,
-                canvas.height,
-                0,
-                1
-            );
-            passEncoder.setScissorRect(
-                0,
-                0,
-                canvas.width,
-                canvas.height
-            );
-            // for (let key in program.pipelineOpt) {
-            //     let bfs = program.attributeBuffers[key];
-            //     passEncoder.setVertexBuffer(bfs.location, bfs.buffer as any);
-            // }
             for (let data of (program as any).attribute) {
                 passEncoder.setVertexBuffer(data.location, data.buffer.buffer);
             }
             passEncoder.setIndexBuffer(program.indexBuffer as any, 'uint16');
             passEncoder.drawIndexed(3, 1);
-            passEncoder.end();
         }
+        passEncoder.end();
         
 
         device.queue.submit([commandEncoder.finish()]);

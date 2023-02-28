@@ -24,6 +24,22 @@ const colors = new Float32Array([
   1.0 // 🔵
 ]);
 
+const positions1 = new Float32Array([
+  1.0, 1.0, 0.0, 1.0, -1.0, 0.0, -1, 0, 0.0
+]);
+// 🎨 Color Vertex Buffer Data
+const colors1 = new Float32Array([
+  1.0,
+  1.0,
+  0.0, // 🔴
+  0.0,
+  1.0,
+  1.0, // 🟢
+  1.0,
+  0.0,
+  1.0 // 🔵
+]);
+
 // 📇 Index Buffer Data
 const indices = new Uint16Array([0, 1, 2]);
 export default {
@@ -44,6 +60,20 @@ export default {
     let render = new Render("App");
     await render.init();
 
+    console.log(this);
+
+    let pip = createPip(render, positions, colors, indices);
+    let pip1 = createPip(render, positions1, colors1, indices);
+
+    render.pipelineArr.push(pip1 as any);
+    render.pipelineArr.push(pip as any);
+
+
+    render.loop()
+  },
+}
+
+function createPip(render, positions, colors, indices) {
     var positionBuffer = new Buffer(positions, GPUBufferUsage.VERTEX, 0);
     positionBuffer.createBuffer(render.device as any);
     var colorBuffer = new Buffer(colors, GPUBufferUsage.VERTEX, 1);
@@ -112,13 +142,8 @@ export default {
 
     (pip as any).indexBuffer = indexBuffer.buffer;
     pip.createPipeline(render.device as any);
-
-    render.pipelineArr.push(pip as any);
-
-
-    render.loop()
+    return pip;
   }
-}
 
 </script>
 
