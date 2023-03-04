@@ -8,8 +8,9 @@ import { Shader } from "../../source/core/Shader";
 import { Attribute } from "../../source/core/Attribute";
 import { Pipeline } from "../../source/render/Pipeline";
 // 📈 Position Vertex Buffer Data
+let testz1 = 0.5;
 const positions = new Float32Array([
-  1.0, -1.0, 0.0, -1.0, -1.0, 0.0, 0.0, 1.0, 0.0
+  1.0, -1.0, testz1, -1.0, -1.0, testz1, 0.0, 1.0, testz1
 ]);
 // 🎨 Color Vertex Buffer Data
 const colors = new Float32Array([
@@ -24,8 +25,9 @@ const colors = new Float32Array([
   1.0 // 🔵
 ]);
 
+let testz = 0.0;
 const positions1 = new Float32Array([
-  1.0, 1.0, 0.0, 1.0, -1.0, 0.0, -1, 0, 0.0
+  1.0, 1.0, testz, 1.0, -1.0, testz, -1, 0, testz
 ]);
 // 🎨 Color Vertex Buffer Data
 const colors1 = new Float32Array([
@@ -65,8 +67,10 @@ export default {
     let pip = createPip(render, positions, colors, indices);
     let pip1 = createPip(render, positions1, colors1, indices);
 
-    render.pipelineArr.push(pip1 as any);
+    // 奇怪现象：同一深度时先渲染的可见
     render.pipelineArr.push(pip as any);
+    render.pipelineArr.push(pip1 as any);
+    
 
 
     render.loop()
@@ -118,7 +122,19 @@ function createPip(render, positions, colors, indices) {
     vs.createShaderModule(render.device as any);
 
     const colorState: GPUColorTargetState = {
-      format: 'bgra8unorm'
+      format: 'rgba16float',
+      blend: {
+        color: {
+          operation: "add",
+          srcFactor: "one",
+          dstFactor: "one-minus-src-alpha"
+        },
+        alpha: {
+          operation: "add",
+          srcFactor: "one",
+          dstFactor: "one-minus-src-alpha"
+        },
+      }
     };
 
     const fragment = new Shader({

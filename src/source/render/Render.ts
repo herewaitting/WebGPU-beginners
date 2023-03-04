@@ -117,7 +117,10 @@ class Render {
 
         var commandEncoder = device.createCommandEncoder();
 
+        // 目前认知理解这里对同一渲染目标（fbo或者屏幕）只需创建一次
         var passEncoder = commandEncoder.beginRenderPass(renderPassDesc);
+
+        // 设置窗口绘制起始像素点与宽高
         passEncoder.setViewport(
             0,
             0,
@@ -133,7 +136,7 @@ class Render {
             canvas.height
         );
 
-        // 🖌️ Encode drawing commands
+        // 🖌️ Encode drawing commands 便利渲染pipeline队列
         for (let program of this.pipelineArr) {
             let pipeline = program.pipeline;
             if (!pipeline) {
@@ -148,7 +151,7 @@ class Render {
         }
         passEncoder.end();
         
-
+        // 把渲染队列提交给硬件
         device.queue.submit([commandEncoder.finish()]);
 
         requestAnimationFrame(this.loop.bind(this));
