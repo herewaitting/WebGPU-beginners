@@ -122,7 +122,7 @@ function createPip(render, positions, colors, indices) {
     vs.createShaderModule(render.device as any);
 
     const colorState: GPUColorTargetState = {
-      format: 'rgba16float',
+      format: 'bgra8unorm',
       blend: {
         color: {
           operation: "add",

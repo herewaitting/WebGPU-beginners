@@ -7,7 +7,7 @@ export enum ShaderLanguageType {
 interface ShaderOpt {
     type: ShaderLanguageType;
     shaderTxt: string;
-    target: Iterable<GPUColorTargetState | null> | undefined;
+    target: GPUColorTargetState[] | undefined;
     buffers?: Iterable<GPUVertexBufferLayout | null>;
     [key: string]: any;
 }
@@ -15,7 +15,7 @@ interface ShaderOpt {
 export class Shader {
     type: ShaderLanguageType;
     shaderTxt: string;
-    target: Iterable<GPUColorTargetState | null> | undefined;
+    target: GPUColorTargetState[] | undefined;
     state: GPUFragmentState | GPUVertexState | undefined;
     buffers: Iterable<GPUVertexBufferLayout | null> | undefined;
     datas: any;
@@ -43,9 +43,7 @@ export class Shader {
             return;
         }
         if (this.target) {
-            const colorState: GPUColorTargetState = {
-                format: 'bgra8unorm'
-            };
+            const colorState: GPUColorTargetState = this.target[0];
             this.state = {
                 module: module,
                 entryPoint: 'main',
