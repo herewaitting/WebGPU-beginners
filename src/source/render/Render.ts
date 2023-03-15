@@ -4,7 +4,8 @@
 import glslangModule from "../../lib/glslang"
 import { Pipeline } from "./Pipeline";
 import { PipelineProgram } from "./PipelineProgram";
-
+import { async2sync } from "../core/async2sync";
+window.async2sync = async2sync;
 interface RenderOpt {
 
 }
@@ -34,6 +35,7 @@ class Render {
     async init() {
         // 准备适配器
         this.adapter = await navigator.gpu.requestAdapter();
+        // this.adapter = async2sync(navigator.gpu.requestAdapter) as any;
         this.device = await this.adapter?.requestDevice();
         if (!this.device) {
             throw Error("获取硬件失败");
